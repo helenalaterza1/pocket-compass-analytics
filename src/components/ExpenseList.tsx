@@ -4,7 +4,7 @@ import { Button } from '@/components/ui/button';
 import { Trash2, CreditCard, Banknote } from 'lucide-react';
 import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
-import { Expense, CATEGORIES, PAYMENT_METHODS } from '@/types/expense';
+import { Expense, CATEGORIES, PAYMENT_METHODS, SUBCATEGORIES } from '@/types/expense';
 
 interface ExpenseListProps {
   expenses: Expense[];
@@ -65,10 +65,18 @@ export function ExpenseList({ expenses, onDeleteExpense }: ExpenseListProps) {
                   >
                     {CATEGORIES[expense.category]}
                   </Badge>
+                  <Badge variant="outline" className="text-xs">
+                    {SUBCATEGORIES[expense.category]?.[expense.subcategory as keyof typeof SUBCATEGORIES[typeof expense.category]] || expense.subcategory}
+                  </Badge>
                   <Badge variant="outline">
                     {PAYMENT_METHODS[expense.paymentMethod]}
                   </Badge>
                 </div>
+                {expense.description && (
+                  <p className="text-sm text-foreground mb-1 font-medium truncate">
+                    {expense.description}
+                  </p>
+                )}
                 <p className="text-sm text-muted-foreground">
                   {format(new Date(expense.date), "dd 'de' MMMM 'de' yyyy", { locale: ptBR })}
                 </p>

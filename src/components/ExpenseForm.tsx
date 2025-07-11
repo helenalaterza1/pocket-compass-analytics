@@ -4,13 +4,14 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Textarea } from '@/components/ui/textarea';
 import { Calendar } from '@/components/ui/calendar';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { CalendarIcon, Plus } from 'lucide-react';
 import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import { cn } from '@/lib/utils';
-import { Expense, CATEGORIES, PAYMENT_METHODS } from '@/types/expense';
+import { Expense, CATEGORIES, PAYMENT_METHODS, SUBCATEGORIES } from '@/types/expense';
 
 interface ExpenseFormProps {
   onAddExpense: (expense: Omit<Expense, 'id'>) => void;
@@ -21,11 +22,13 @@ export function ExpenseForm({ onAddExpense }: ExpenseFormProps) {
   const [paymentMethod, setPaymentMethod] = useState<'credit' | 'debit' | ''>('');
   const [date, setDate] = useState<Date>(new Date());
   const [category, setCategory] = useState<string>('');
+  const [subcategory, setSubcategory] = useState<string>('');
+  const [description, setDescription] = useState<string>('');
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     
-    if (!value || !paymentMethod || !category) {
+    if (!value || !paymentMethod || !category || !subcategory) {
       return;
     }
 
@@ -33,7 +36,9 @@ export function ExpenseForm({ onAddExpense }: ExpenseFormProps) {
       value: parseFloat(value),
       paymentMethod: paymentMethod as 'credit' | 'debit',
       date: format(date, 'yyyy-MM-dd'),
-      category: category as any
+      category: category as any,
+      subcategory,
+      description: description || undefined
     };
 
     onAddExpense(expense);
@@ -42,7 +47,14 @@ export function ExpenseForm({ onAddExpense }: ExpenseFormProps) {
     setValue('');
     setPaymentMethod('');
     setCategory('');
+    setSubcategory('');
+    setDescription('');
     setDate(new Date());
+  };
+
+  const handleCategoryChange = (newCategory: string) => {
+    setCategory(newCategory);
+    setSubcategory(''); // Reset subcategory when category changes
   };
 
   return (
@@ -113,7 +125,7 @@ export function ExpenseForm({ onAddExpense }: ExpenseFormProps) {
 
           <div className="space-y-2">
             <Label htmlFor="category">Categoria</Label>
-            <Select value={category} onValueChange={setCategory} required>
+            <Select value={category} onValueChange={handleCategoryChange} required>
               <SelectTrigger>
                 <SelectValue placeholder="Selecione" />
               </SelectTrigger>
@@ -126,6 +138,36 @@ export function ExpenseForm({ onAddExpense }: ExpenseFormProps) {
               </SelectContent>
             </Select>
           </div>
+
+          {category && (
+            <div className="space-y-2">
+              <Label htmlFor="subcategory">Subcategoria</Label>
+              <Select value={subcategory} onValueChange={setSubcategory} required>
+                <SelectTrigger>
+                  <SelectValue placeholder="Selecione a subcategoria" />
+                </SelectTrigger>
+                <SelectContent>
+                  {Object.entries(SUBCATEGORIES[category as keyof typeof SUBCATEGORIES] || {}).map(([key, label]) => (
+                    <SelectItem key={key} value={key}>
+                      {label}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+          )}
+        </div>
+
+        <div className="space-y-2">
+          <Label htmlFor="description">Descrição (opcional)</Label>
+          <Textarea
+            id="description"
+            value={description}
+            onChange={(e) => setDescription(e.target.value)}
+            placeholder="Adicione uma descrição para este gasto..."
+            rows={3}
+            className="resize-none"
+          />
         </div>
 
         <Button 
