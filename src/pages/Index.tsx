@@ -3,18 +3,22 @@ import { ExpenseForm } from '@/components/ExpenseForm';
 import { ExpenseChart } from '@/components/ExpenseChart';
 import { ExpenseList } from '@/components/ExpenseList';
 import { MonthSelector } from '@/components/MonthSelector';
+import { SettingsDialog } from '@/components/SettingsDialog';
 import { useExpenses } from '@/hooks/useExpenses';
+import { useSettings } from '@/hooks/useSettings';
 import { useToast } from '@/hooks/use-toast';
 import { Wallet, TrendingUp } from 'lucide-react';
 
 const Index = () => {
   const [selectedDate, setSelectedDate] = useState(new Date());
   const { addExpense, deleteExpense, getExpensesByMonth } = useExpenses();
+  const { settings } = useSettings();
   const { toast } = useToast();
 
   const currentMonthExpenses = getExpensesByMonth(
     selectedDate.getFullYear(),
-    selectedDate.getMonth()
+    selectedDate.getMonth(),
+    settings.cardClosingDay
   );
 
   const handleAddExpense = (expenseData: any) => {
@@ -39,14 +43,17 @@ const Index = () => {
       {/* Header */}
       <header className="bg-card shadow-card border-b">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
-          <div className="flex items-center justify-center space-x-3">
-            <div className="flex items-center justify-center w-12 h-12 bg-gradient-primary rounded-xl shadow-elegant">
-              <Wallet className="h-6 w-6 text-primary-foreground" />
+          <div className="flex items-center justify-between w-full">
+            <div className="flex items-center space-x-3">
+              <div className="flex items-center justify-center w-12 h-12 bg-gradient-primary rounded-xl shadow-elegant">
+                <Wallet className="h-6 w-6 text-primary-foreground" />
+              </div>
+              <div>
+                <h1 className="text-3xl font-bold text-foreground">Controle de Gastos</h1>
+                <p className="text-muted-foreground">Gerencie suas finanças pessoais</p>
+              </div>
             </div>
-            <div>
-              <h1 className="text-3xl font-bold text-foreground">Controle de Gastos</h1>
-              <p className="text-muted-foreground">Gerencie suas finanças pessoais</p>
-            </div>
+            <SettingsDialog />
           </div>
         </div>
       </header>

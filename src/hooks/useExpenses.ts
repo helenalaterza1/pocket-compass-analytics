@@ -35,9 +35,23 @@ export function useExpenses() {
     setExpenses(prev => prev.filter(expense => expense.id !== id));
   };
 
-  const getExpensesByMonth = (year: number, month: number) => {
+  const getExpensesByMonth = (year: number, month: number, cardClosingDay: number = 5) => {
     return expenses.filter(expense => {
       const expenseDate = new Date(expense.date);
+      
+      // For credit card expenses, adjust month based on closing day
+      if (expense.paymentMethod === 'credit') {
+        const expenseDay = expenseDate.getDate();
+        
+        if (expenseDay > cardClosingDay) {
+          // If expense is after closing day, it goes to next month's bill
+          const nextMonth = new Date(expenseDate);
+          nextMonth.setMonth(nextMonth.getMonth() + 1);
+          return nextMonth.getFullYear() === year && nextMonth.getMonth() === month;
+        }
+      }
+      
+      // For debit or credit expenses before closing day, use actual date
       return expenseDate.getFullYear() === year && expenseDate.getMonth() === month;
     });
   };

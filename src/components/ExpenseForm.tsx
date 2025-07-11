@@ -7,11 +7,12 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Textarea } from '@/components/ui/textarea';
 import { Calendar } from '@/components/ui/calendar';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
-import { CalendarIcon, Plus } from 'lucide-react';
+import { CalendarIcon, Plus, Info } from 'lucide-react';
 import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import { cn } from '@/lib/utils';
 import { Expense, CATEGORIES, PAYMENT_METHODS, SUBCATEGORIES } from '@/types/expense';
+import { useSettings } from '@/hooks/useSettings';
 
 interface ExpenseFormProps {
   onAddExpense: (expense: Omit<Expense, 'id'>) => void;
@@ -24,6 +25,34 @@ export function ExpenseForm({ onAddExpense }: ExpenseFormProps) {
   const [category, setCategory] = useState<string>('');
   const [subcategory, setSubcategory] = useState<string>('');
   const [description, setDescription] = useState<string>('');
+  const { settings } = useSettings();
+
+  const getBillingInfo = () => {
+    if (paymentMethod === 'credit' && date) {
+      const expenseDay = date.getDate();
+      const currentMonth = date.getMonth();
+      const currentYear = date.getFullYear();
+      
+      if (expenseDay > settings.cardClosingDay) {
+        // Goes to next month's bill
+        const nextMonth = new Date(currentYear, currentMonth + 1);
+        return {
+          month: format(nextMonth, 'MMMM', { locale: ptBR }),
+          isNextMonth: true
+        };
+      } else {
+        // Stays in current month's bill
+        const currentMonthName = format(date, 'MMMM', { locale: ptBR });
+        return {
+          month: currentMonthName,
+          isNextMonth: false
+        };
+      }
+    }
+    return null;
+  };
+
+  const billingInfo = getBillingInfo();
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -121,6 +150,14 @@ export function ExpenseForm({ onAddExpense }: ExpenseFormProps) {
                 />
               </PopoverContent>
             </Popover>
+            {billingInfo && (
+              <div className="flex items-center space-x-2 mt-2 p-3 bg-muted/50 rounded-lg">
+                <Info className="h-4 w-4 text-muted-foreground" />
+                <p className="text-sm text-muted-foreground">
+                  Esse gasto está na sua fatura do mês de <strong>{billingInfo.month}</strong>, e será adicionado por lá
+                </p>
+              </div>
+            )}
           </div>
 
           <div className="space-y-2">
