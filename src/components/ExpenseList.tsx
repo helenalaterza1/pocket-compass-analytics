@@ -91,22 +91,22 @@ export function ExpenseList({ expenses, onDeleteExpense, onEditExpense }: Expens
                 </p>
               </div>
               
-              <div className="flex space-x-1">
+              <div className="flex flex-col space-y-1">
                 <Button
                   variant="ghost"
                   size="sm"
                   onClick={() => onEditExpense(expense)}
-                  className="text-primary hover:text-primary hover:bg-primary/10"
+                  className="h-7 w-7 p-0 text-primary hover:text-primary hover:bg-primary/10"
                 >
-                  <Edit className="h-4 w-4" />
+                  <Edit className="h-3 w-3" />
                 </Button>
                 <Button
                   variant="ghost"
                   size="sm"
                   onClick={() => onDeleteExpense(expense.id)}
-                  className="text-destructive hover:text-destructive hover:bg-destructive/10"
+                  className="h-7 w-7 p-0 text-destructive hover:text-destructive hover:bg-destructive/10"
                 >
-                  <Trash2 className="h-4 w-4" />
+                  <Trash2 className="h-3 w-3" />
                 </Button>
               </div>
             </div>
