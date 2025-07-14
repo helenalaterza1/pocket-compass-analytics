@@ -1,7 +1,7 @@
 import { Card } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { Trash2, CreditCard, Banknote } from 'lucide-react';
+import { Trash2, CreditCard, Banknote, Edit } from 'lucide-react';
 import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import { Expense, CATEGORIES, PAYMENT_METHODS, SUBCATEGORIES } from '@/types/expense';
@@ -9,6 +9,7 @@ import { Expense, CATEGORIES, PAYMENT_METHODS, SUBCATEGORIES } from '@/types/exp
 interface ExpenseListProps {
   expenses: Expense[];
   onDeleteExpense: (id: string) => void;
+  onEditExpense: (expense: Expense) => void;
 }
 
 const CATEGORY_COLORS = {
@@ -19,7 +20,7 @@ const CATEGORY_COLORS = {
   lazer: 'bg-purple-100 text-purple-800 border-purple-200'
 };
 
-export function ExpenseList({ expenses, onDeleteExpense }: ExpenseListProps) {
+export function ExpenseList({ expenses, onDeleteExpense, onEditExpense }: ExpenseListProps) {
   const sortedExpenses = [...expenses].sort((a, b) => 
     new Date(b.date).getTime() - new Date(a.date).getTime()
   );
@@ -90,14 +91,24 @@ export function ExpenseList({ expenses, onDeleteExpense }: ExpenseListProps) {
                 </p>
               </div>
               
-              <Button
-                variant="ghost"
-                size="sm"
-                onClick={() => onDeleteExpense(expense.id)}
-                className="text-destructive hover:text-destructive hover:bg-destructive/10"
-              >
-                <Trash2 className="h-4 w-4" />
-              </Button>
+              <div className="flex space-x-1">
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={() => onEditExpense(expense)}
+                  className="text-primary hover:text-primary hover:bg-primary/10"
+                >
+                  <Edit className="h-4 w-4" />
+                </Button>
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={() => onDeleteExpense(expense.id)}
+                  className="text-destructive hover:text-destructive hover:bg-destructive/10"
+                >
+                  <Trash2 className="h-4 w-4" />
+                </Button>
+              </div>
             </div>
           </div>
         ))}

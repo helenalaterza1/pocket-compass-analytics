@@ -16,15 +16,18 @@ import { useSettings } from '@/hooks/useSettings';
 
 interface ExpenseFormProps {
   onAddExpense: (expense: Omit<Expense, 'id'>) => void;
+  editingExpense?: Expense | null;
+  onUpdateExpense?: (id: string, expense: Omit<Expense, 'id'>) => void;
+  onCancelEdit?: () => void;
 }
 
-export function ExpenseForm({ onAddExpense }: ExpenseFormProps) {
-  const [value, setValue] = useState('');
-  const [paymentMethod, setPaymentMethod] = useState<'credit' | 'debit' | ''>('');
-  const [date, setDate] = useState<Date>(new Date());
-  const [category, setCategory] = useState<string>('');
-  const [subcategory, setSubcategory] = useState<string>('');
-  const [description, setDescription] = useState<string>('');
+export function ExpenseForm({ onAddExpense, editingExpense, onUpdateExpense, onCancelEdit }: ExpenseFormProps) {
+  const [value, setValue] = useState(editingExpense?.value.toString() || '');
+  const [paymentMethod, setPaymentMethod] = useState<'credit' | 'debit' | ''>(editingExpense?.paymentMethod || '');
+  const [date, setDate] = useState<Date>(editingExpense ? new Date(editingExpense.date) : new Date());
+  const [category, setCategory] = useState<string>(editingExpense?.category || '');
+  const [subcategory, setSubcategory] = useState<string>(editingExpense?.subcategory || '');
+  const [description, setDescription] = useState<string>(editingExpense?.description || '');
   const { settings } = useSettings();
 
   const getBillingInfo = () => {
@@ -70,7 +73,11 @@ export function ExpenseForm({ onAddExpense }: ExpenseFormProps) {
       description: description || undefined
     };
 
-    onAddExpense(expense);
+    if (editingExpense && onUpdateExpense) {
+      onUpdateExpense(editingExpense.id, expense);
+    } else {
+      onAddExpense(expense);
+    }
     
     // Reset form
     setValue('');
@@ -90,8 +97,12 @@ export function ExpenseForm({ onAddExpense }: ExpenseFormProps) {
     <Card className="p-6 bg-gradient-card shadow-card">
       <form onSubmit={handleSubmit} className="space-y-6">
         <div className="text-center mb-6">
-          <h2 className="text-2xl font-semibold text-foreground mb-2">Novo Gasto</h2>
-          <p className="text-muted-foreground">Registre um novo gasto pessoal</p>
+          <h2 className="text-2xl font-semibold text-foreground mb-2">
+            {editingExpense ? 'Editar Gasto' : 'Novo Gasto'}
+          </h2>
+          <p className="text-muted-foreground">
+            {editingExpense ? 'Edite os dados do gasto' : 'Registre um novo gasto pessoal'}
+          </p>
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
@@ -207,15 +218,28 @@ export function ExpenseForm({ onAddExpense }: ExpenseFormProps) {
           />
         </div>
 
-        <Button 
-          type="submit" 
-          variant="gradient"
-          size="lg"
-          className="w-full"
-        >
-          <Plus className="mr-2 h-5 w-5" />
-          Adicionar Gasto
-        </Button>
+        <div className="flex gap-3">
+          {editingExpense && onCancelEdit && (
+            <Button 
+              type="button" 
+              variant="outline"
+              size="lg"
+              className="flex-1"
+              onClick={onCancelEdit}
+            >
+              Cancelar
+            </Button>
+          )}
+          <Button 
+            type="submit" 
+            variant="gradient"
+            size="lg"
+            className="flex-1"
+          >
+            <Plus className="mr-2 h-5 w-5" />
+            {editingExpense ? 'Salvar Alterações' : 'Adicionar Gasto'}
+          </Button>
+        </div>
       </form>
     </Card>
   );

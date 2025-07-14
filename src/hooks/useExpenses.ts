@@ -35,6 +35,12 @@ export function useExpenses() {
     setExpenses(prev => prev.filter(expense => expense.id !== id));
   };
 
+  const updateExpense = (id: string, expenseData: Omit<Expense, 'id'>) => {
+    setExpenses(prev => prev.map(expense => 
+      expense.id === id ? { ...expenseData, id } : expense
+    ));
+  };
+
   const getExpensesByMonth = (year: number, month: number, cardClosingDay: number = 5) => {
     return expenses.filter(expense => {
       const expenseDate = new Date(expense.date);
@@ -60,6 +66,7 @@ export function useExpenses() {
     expenses,
     addExpense,
     deleteExpense,
+    updateExpense,
     getExpensesByMonth
   };
 }

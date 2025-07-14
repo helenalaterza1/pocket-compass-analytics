@@ -7,11 +7,13 @@ import { SettingsDialog } from '@/components/SettingsDialog';
 import { useExpenses } from '@/hooks/useExpenses';
 import { useSettings } from '@/hooks/useSettings';
 import { useToast } from '@/hooks/use-toast';
+import { Expense } from '@/types/expense';
 import { Wallet, TrendingUp } from 'lucide-react';
 
 const Index = () => {
   const [selectedDate, setSelectedDate] = useState(new Date());
-  const { addExpense, deleteExpense, getExpensesByMonth } = useExpenses();
+  const { addExpense, deleteExpense, updateExpense, getExpensesByMonth } = useExpenses();
+  const [editingExpense, setEditingExpense] = useState<Expense | null>(null);
   const { settings } = useSettings();
   const { toast } = useToast();
 
@@ -70,7 +72,12 @@ const Index = () => {
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
           {/* Left Column - Form */}
           <div className="space-y-8">
-            <ExpenseForm onAddExpense={handleAddExpense} />
+            <ExpenseForm 
+              onAddExpense={handleAddExpense}
+              editingExpense={editingExpense}
+              onUpdateExpense={updateExpense}
+              onCancelEdit={() => setEditingExpense(null)}
+            />
             
             {/* Stats Card */}
             <div className="bg-gradient-primary rounded-xl p-6 text-primary-foreground shadow-elegant">
@@ -99,6 +106,7 @@ const Index = () => {
             <ExpenseList 
               expenses={currentMonthExpenses}
               onDeleteExpense={handleDeleteExpense}
+              onEditExpense={(expense) => setEditingExpense(expense)}
             />
           </div>
         </div>
