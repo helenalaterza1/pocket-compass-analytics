@@ -8,6 +8,7 @@ import { Separator } from '@/components/ui/separator';
 import { useSettings } from '@/hooks/useSettings';
 import { useExpenses } from '@/hooks/useExpenses';
 import { useToast } from '@/hooks/use-toast';
+import * as XLSX from 'xlsx';
 
 export function SettingsDialog() {
   const { settings, updateSettings } = useSettings();
@@ -21,7 +22,14 @@ export function SettingsDialog() {
     updateSettings({ cardClosingDay: parseInt(closingDay) });
   };
 
-  const parseDate = (dateStr: string): Date => {
+  const parseDate = (dateValue: any): Date => {
+    // Handle Excel date values
+    if (typeof dateValue === 'number') {
+      // Excel date serial number
+      return new Date((dateValue - 25569) * 86400 * 1000);
+    }
+    
+    const dateStr = String(dateValue);
     // Try different date formats
     if (dateStr.includes('-')) {
       // Format: 2025-01-03
@@ -40,46 +48,49 @@ export function SettingsDialog() {
 
     const reader = new FileReader();
     reader.onload = (e) => {
-      const csv = e.target?.result as string;
-      const lines = csv.split('\n').filter(line => line.trim());
-      
-      if (lines.length < 2) {
-        toast({
-          title: "Erro",
-          description: "Arquivo CSV deve ter pelo menos uma linha de dados além do cabeçalho.",
-          variant: "destructive"
-        });
-        return;
-      }
-
-      let importedCount = 0;
-      const errors: string[] = [];
-
       try {
+        const data = new Uint8Array(e.target?.result as ArrayBuffer);
+        const workbook = XLSX.read(data, { type: 'array' });
+        const sheetName = workbook.SheetNames[0];
+        const worksheet = workbook.Sheets[sheetName];
+        const jsonData = XLSX.utils.sheet_to_json(worksheet, { header: 1 });
+
+        if (jsonData.length < 2) {
+          toast({
+            title: "Erro",
+            description: "Arquivo Excel deve ter pelo menos uma linha de dados além do cabeçalho.",
+            variant: "destructive"
+          });
+          return;
+        }
+
+        let importedCount = 0;
+        const errors: string[] = [];
+
         if (importType === 'fatura') {
-          // Skip header line
-          for (let i = 1; i < lines.length; i++) {
-            const line = lines[i].trim();
-            if (!line) continue;
+          // Fatura format: date, title, amount (columns A, B, C)
+          for (let i = 1; i < jsonData.length; i++) {
+            const row = jsonData[i] as any[];
+            if (!row || row.length < 3) continue;
             
-            const [date, title, amount] = line.split('\t');
+            const [date, title, amount] = row;
             
-            if (!date || !title || !amount) {
+            if (!date || !title || amount === undefined || amount === null) {
               errors.push(`Linha ${i + 1}: dados incompletos`);
               continue;
             }
 
-            const amountNum = parseFloat(amount);
-            if (amountNum <= 0) continue; // Skip negative or zero amounts for fatura
+            const amountNum = typeof amount === 'number' ? amount : parseFloat(String(amount));
+            if (isNaN(amountNum) || amountNum <= 0) continue; // Skip invalid, negative or zero amounts for fatura
 
             try {
               addExpense({
-                description: title.trim(),
+                description: String(title).trim(),
                 value: amountNum,
                 category: 'lazer',
                 subcategory: 'outros',
                 paymentMethod: 'credit',
-                date: parseDate(date.trim()).toISOString().split('T')[0]
+                date: parseDate(date).toISOString().split('T')[0]
               });
               importedCount++;
             } catch (error) {
@@ -87,29 +98,29 @@ export function SettingsDialog() {
             }
           }
         } else {
-          // Extrato format
-          for (let i = 1; i < lines.length; i++) {
-            const line = lines[i].trim();
-            if (!line) continue;
+          // Extrato format: Data, Valor, Identificador, Descrição (columns A, B, C, D)
+          for (let i = 1; i < jsonData.length; i++) {
+            const row = jsonData[i] as any[];
+            if (!row || row.length < 4) continue;
             
-            const [data, valor, identificador, descricao] = line.split('\t');
+            const [data, valor, identificador, descricao] = row;
             
-            if (!data || !valor || !descricao) {
+            if (!data || valor === undefined || valor === null || !descricao) {
               errors.push(`Linha ${i + 1}: dados incompletos`);
               continue;
             }
 
-            const valorNum = parseFloat(valor);
-            if (valorNum >= 0) continue; // Skip positive values (income) for extrato
+            const valorNum = typeof valor === 'number' ? valor : parseFloat(String(valor));
+            if (isNaN(valorNum) || valorNum >= 0) continue; // Skip invalid or positive values (income) for extrato
 
             try {
               addExpense({
-                description: descricao.trim(),
+                description: String(descricao).trim(),
                 value: Math.abs(valorNum), // Convert negative to positive
                 category: 'lazer',
                 subcategory: 'outros',
                 paymentMethod: 'debit',
-                date: parseDate(data.trim()).toISOString().split('T')[0]
+                date: parseDate(data).toISOString().split('T')[0]
               });
               importedCount++;
             } catch (error) {
@@ -128,15 +139,16 @@ export function SettingsDialog() {
         }
 
       } catch (error) {
+        console.error('Erro na importação:', error);
         toast({
           title: "Erro na importação",
-          description: "Erro ao processar o arquivo CSV.",
+          description: "Erro ao processar o arquivo Excel.",
           variant: "destructive"
         });
       }
     };
 
-    reader.readAsText(file);
+    reader.readAsArrayBuffer(file);
     
     // Reset file input
     if (fileInputRef.current) {
@@ -184,7 +196,7 @@ export function SettingsDialog() {
           <Separator />
 
           <div className="space-y-3">
-            <Label>Importar gastos do CSV</Label>
+            <Label>Importar gastos do Excel</Label>
             
             <div className="space-y-3">
               <Select value={importType} onValueChange={(value: 'fatura' | 'extrato') => setImportType(value)}>
@@ -199,15 +211,15 @@ export function SettingsDialog() {
 
               <div className="text-sm text-muted-foreground">
                 {importType === 'fatura' ? (
-                  <p>Formato esperado: Data, Título, Valor (separados por TAB)</p>
+                  <p>Formato esperado: Coluna A = Data, Coluna B = Título, Coluna C = Valor</p>
                 ) : (
-                  <p>Formato esperado: Data, Valor, Identificador, Descrição (separados por TAB)</p>
+                  <p>Formato esperado: Coluna A = Data, Coluna B = Valor, Coluna C = Identificador, Coluna D = Descrição</p>
                 )}
               </div>
 
               <input
                 type="file"
-                accept=".csv"
+                accept=".xlsx,.xls"
                 onChange={handleFileImport}
                 ref={fileInputRef}
                 className="hidden"
@@ -219,7 +231,7 @@ export function SettingsDialog() {
                 className="w-full"
               >
                 <Upload className="h-4 w-4 mr-2" />
-                Selecionar arquivo CSV
+                Selecionar arquivo Excel
               </Button>
             </div>
           </div>
