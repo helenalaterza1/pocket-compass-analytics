@@ -28,7 +28,12 @@ export function useExpenses() {
       ...expenseData,
       id: crypto.randomUUID()
     };
-    setExpenses(prev => [...prev, newExpense]);
+    console.log('Adding expense to useExpenses:', newExpense);
+    setExpenses(prev => {
+      const updated = [...prev, newExpense];
+      console.log('Updated expenses array:', updated);
+      return updated;
+    });
   };
 
   const deleteExpense = (id: string) => {
@@ -42,8 +47,12 @@ export function useExpenses() {
   };
 
   const getExpensesByMonth = (year: number, month: number, cardClosingDay: number = 5) => {
-    return expenses.filter(expense => {
+    console.log('getExpensesByMonth called with:', { year, month, cardClosingDay });
+    console.log('Total expenses:', expenses.length);
+    
+    const filtered = expenses.filter(expense => {
       const expenseDate = new Date(expense.date);
+      console.log('Checking expense:', expense.description, 'Date:', expense.date, 'Parsed:', expenseDate);
       
       // For credit card expenses, adjust month based on closing day
       if (expense.paymentMethod === 'credit') {
@@ -53,13 +62,20 @@ export function useExpenses() {
           // If expense is after closing day, it goes to next month's bill
           const nextMonth = new Date(expenseDate);
           nextMonth.setMonth(nextMonth.getMonth() + 1);
-          return nextMonth.getFullYear() === year && nextMonth.getMonth() === month;
+          const matches = nextMonth.getFullYear() === year && nextMonth.getMonth() === month;
+          console.log('Credit card expense (after closing):', matches);
+          return matches;
         }
       }
       
       // For debit or credit expenses before closing day, use actual date
-      return expenseDate.getFullYear() === year && expenseDate.getMonth() === month;
+      const matches = expenseDate.getFullYear() === year && expenseDate.getMonth() === month;
+      console.log('Regular expense match:', matches);
+      return matches;
     });
+    
+    console.log('Filtered expenses for month:', filtered);
+    return filtered;
   };
 
   return {
