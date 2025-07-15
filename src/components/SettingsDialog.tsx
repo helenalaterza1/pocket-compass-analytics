@@ -23,28 +23,55 @@ export function SettingsDialog() {
   };
 
   const parseDate = (dateValue: any): Date => {
+    console.log('Parsing date:', dateValue, 'Type:', typeof dateValue);
+    
     // Handle Excel date values
     if (typeof dateValue === 'number') {
       // Excel date serial number
-      return new Date((dateValue - 25569) * 86400 * 1000);
+      const parsedDate = new Date((dateValue - 25569) * 86400 * 1000);
+      console.log('Excel date parsed to:', parsedDate);
+      return parsedDate;
     }
     
     const dateStr = String(dateValue);
+    console.log('Date string:', dateStr);
+    
     // Try different date formats
     if (dateStr.includes('-')) {
       // Format: 2025-01-03
-      return new Date(dateStr);
+      const parsedDate = new Date(dateStr);
+      console.log('ISO date parsed to:', parsedDate);
+      return parsedDate;
     } else if (dateStr.includes('/')) {
-      // Format: 01/06/2025
-      const [day, month, year] = dateStr.split('/');
-      return new Date(parseInt(year), parseInt(month) - 1, parseInt(day));
+      // Format: 01/06/2025 or 01/06/25
+      const parts = dateStr.split('/');
+      console.log('Date parts:', parts);
+      
+      if (parts.length === 3) {
+        const [day, month, year] = parts;
+        let fullYear = parseInt(year);
+        
+        // Handle 2-digit years
+        if (fullYear < 100) {
+          fullYear = fullYear > 50 ? 1900 + fullYear : 2000 + fullYear;
+        }
+        
+        const parsedDate = new Date(fullYear, parseInt(month) - 1, parseInt(day));
+        console.log('Slash date parsed to:', parsedDate);
+        return parsedDate;
+      }
     }
-    return new Date(dateStr);
+    
+    const fallbackDate = new Date(dateStr);
+    console.log('Fallback date parsed to:', fallbackDate);
+    return fallbackDate;
   };
 
   const handleFileImport = (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
     if (!file) return;
+
+    console.log('Starting file import. File:', file.name, 'Type:', importType);
 
     const reader = new FileReader();
     reader.onload = (e) => {
@@ -54,6 +81,9 @@ export function SettingsDialog() {
         const sheetName = workbook.SheetNames[0];
         const worksheet = workbook.Sheets[sheetName];
         const jsonData = XLSX.utils.sheet_to_json(worksheet, { header: 1 });
+
+        console.log('Excel data loaded. Rows:', jsonData.length);
+        console.log('First few rows:', jsonData.slice(0, 3));
 
         if (jsonData.length < 2) {
           toast({
@@ -69,67 +99,101 @@ export function SettingsDialog() {
 
         if (importType === 'fatura') {
           // Fatura format: date, title, amount (columns A, B, C)
+          console.log('Processing as fatura...');
           for (let i = 1; i < jsonData.length; i++) {
             const row = jsonData[i] as any[];
-            if (!row || row.length < 3) continue;
+            console.log(`Processing fatura row ${i}:`, row);
+            
+            if (!row || row.length < 3) {
+              console.log(`Skipping row ${i}: insufficient columns`);
+              continue;
+            }
             
             const [date, title, amount] = row;
+            console.log(`Row ${i} - Date: ${date}, Title: ${title}, Amount: ${amount}`);
             
             if (!date || !title || amount === undefined || amount === null) {
               errors.push(`Linha ${i + 1}: dados incompletos`);
+              console.log(`Row ${i}: incomplete data`);
               continue;
             }
 
             const amountNum = typeof amount === 'number' ? amount : parseFloat(String(amount));
-            if (isNaN(amountNum) || amountNum <= 0) continue; // Skip invalid, negative or zero amounts for fatura
+            console.log(`Row ${i} - Parsed amount:`, amountNum);
+            
+            if (isNaN(amountNum) || amountNum <= 0) {
+              console.log(`Row ${i}: invalid amount, skipping`);
+              continue;
+            }
 
             try {
               const expenseDate = parseDate(date);
-              addExpense({
+              const expenseData = {
                 description: String(title).trim(),
                 value: amountNum,
-                category: 'lazer',
+                category: 'lazer' as const,
                 subcategory: 'outros',
-                paymentMethod: 'credit',
+                paymentMethod: 'credit' as const,
                 date: expenseDate.toISOString().split('T')[0]
-              });
+              };
+              console.log(`Adding fatura expense:`, expenseData);
+              addExpense(expenseData);
               importedCount++;
             } catch (error) {
               errors.push(`Linha ${i + 1}: erro ao processar data`);
+              console.error(`Row ${i} date parsing error:`, error);
             }
           }
         } else {
           // Extrato format: Data, Valor, Identificador, Descrição (columns A, B, C, D)
+          console.log('Processing as extrato...');
           for (let i = 1; i < jsonData.length; i++) {
             const row = jsonData[i] as any[];
-            if (!row || row.length < 4) continue;
+            console.log(`Processing extrato row ${i}:`, row);
+            
+            if (!row || row.length < 4) {
+              console.log(`Skipping row ${i}: insufficient columns (need 4, got ${row?.length})`);
+              continue;
+            }
             
             const [data, valor, identificador, descricao] = row;
+            console.log(`Row ${i} - Data: ${data}, Valor: ${valor}, ID: ${identificador}, Descrição: ${descricao}`);
             
             if (!data || valor === undefined || valor === null || !descricao) {
               errors.push(`Linha ${i + 1}: dados incompletos`);
+              console.log(`Row ${i}: incomplete data`);
               continue;
             }
 
-            const valorNum = typeof valor === 'number' ? valor : parseFloat(String(valor));
-            if (isNaN(valorNum) || valorNum >= 0) continue; // Skip invalid or positive values (income) for extrato
+            const valorNum = typeof valor === 'number' ? valor : parseFloat(String(valor).replace(',', '.'));
+            console.log(`Row ${i} - Parsed valor:`, valorNum);
+            
+            if (isNaN(valorNum) || valorNum >= 0) {
+              console.log(`Row ${i}: invalid valor (${valorNum}) or positive value, skipping`);
+              continue;
+            }
 
             try {
               const expenseDate = parseDate(data);
-              addExpense({
+              const expenseData = {
                 description: String(descricao).trim(),
                 value: Math.abs(valorNum), // Convert negative to positive
-                category: 'lazer',
+                category: 'lazer' as const,
                 subcategory: 'outros',
-                paymentMethod: 'debit',
+                paymentMethod: 'debit' as const,
                 date: expenseDate.toISOString().split('T')[0]
-              });
+              };
+              console.log(`Adding extrato expense:`, expenseData);
+              addExpense(expenseData);
               importedCount++;
             } catch (error) {
               errors.push(`Linha ${i + 1}: erro ao processar data`);
+              console.error(`Row ${i} date parsing error:`, error);
             }
           }
         }
+
+        console.log(`Import completed. Imported: ${importedCount}, Errors: ${errors.length}`);
 
         toast({
           title: "Importação concluída",
