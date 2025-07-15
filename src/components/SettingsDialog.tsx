@@ -84,13 +84,14 @@ export function SettingsDialog() {
             if (isNaN(amountNum) || amountNum <= 0) continue; // Skip invalid, negative or zero amounts for fatura
 
             try {
+              const expenseDate = parseDate(date);
               addExpense({
                 description: String(title).trim(),
                 value: amountNum,
                 category: 'lazer',
                 subcategory: 'outros',
                 paymentMethod: 'credit',
-                date: parseDate(date).toISOString().split('T')[0]
+                date: expenseDate.toISOString().split('T')[0]
               });
               importedCount++;
             } catch (error) {
@@ -114,13 +115,14 @@ export function SettingsDialog() {
             if (isNaN(valorNum) || valorNum >= 0) continue; // Skip invalid or positive values (income) for extrato
 
             try {
+              const expenseDate = parseDate(data);
               addExpense({
                 description: String(descricao).trim(),
                 value: Math.abs(valorNum), // Convert negative to positive
                 category: 'lazer',
                 subcategory: 'outros',
                 paymentMethod: 'debit',
-                date: parseDate(data).toISOString().split('T')[0]
+                date: expenseDate.toISOString().split('T')[0]
               });
               importedCount++;
             } catch (error) {
