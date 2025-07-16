@@ -8,18 +8,24 @@ export function useExpenses() {
 
   // Load expenses from localStorage on mount
   useEffect(() => {
+    console.log('Loading expenses from localStorage...');
     const stored = localStorage.getItem(STORAGE_KEY);
     if (stored) {
       try {
-        setExpenses(JSON.parse(stored));
+        const parsed = JSON.parse(stored);
+        console.log('Loaded expenses from localStorage:', parsed.length, 'expenses');
+        setExpenses(parsed);
       } catch (error) {
         console.error('Error loading expenses:', error);
       }
+    } else {
+      console.log('No expenses found in localStorage');
     }
   }, []);
 
   // Save to localStorage whenever expenses change
   useEffect(() => {
+    console.log('Saving expenses to localStorage:', expenses.length, 'expenses');
     localStorage.setItem(STORAGE_KEY, JSON.stringify(expenses));
   }, [expenses]);
 
