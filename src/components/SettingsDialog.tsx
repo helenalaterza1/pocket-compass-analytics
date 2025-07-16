@@ -27,10 +27,10 @@ export function SettingsDialog() {
     
     // Handle Excel date values
     if (typeof dateValue === 'number') {
-      // Excel date serial number - corrected formula
-      // Excel uses 1900-01-01 as day 1, but JavaScript Date uses 1970-01-01
-      const excelEpoch = new Date(1900, 0, 1);
-      const parsedDate = new Date(excelEpoch.getTime() + (dateValue - 1) * 86400 * 1000);
+      // Excel date serial number - convert to JavaScript Date
+      // Excel epoch is 1900-01-01, but with the leap year bug offset
+      // JavaScript epoch is 1970-01-01 (25569 days after Excel epoch)
+      const parsedDate = new Date((dateValue - 25569) * 86400 * 1000);
       console.log('Excel date parsed to:', parsedDate);
       return parsedDate;
     }
