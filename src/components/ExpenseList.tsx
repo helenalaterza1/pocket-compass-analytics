@@ -43,71 +43,149 @@ export function ExpenseList({ expenses, onDeleteExpense, onEditExpense }: Expens
         </Badge>
       </div>
 
-      <div className="space-y-4 max-h-96 overflow-y-auto">
+      <div className="space-y-3 max-h-96 overflow-y-auto">
         {sortedExpenses.map((expense) => (
           <div
             key={expense.id}
-            className="flex items-center justify-between p-4 rounded-lg border bg-card hover:bg-muted/50 transition-colors"
+            className="group relative p-4 rounded-lg border bg-card hover:bg-muted/50 transition-all duration-200 hover:shadow-sm"
           >
-            <div className="flex items-center space-x-4">
-              <div className="flex-shrink-0">
-                {expense.paymentMethod === 'credit' ? (
-                  <CreditCard className="h-5 w-5 text-primary" />
-                ) : (
-                  <Banknote className="h-5 w-5 text-accent" />
-                )}
-              </div>
-              
-              <div className="flex-1 min-w-0">
-                <div className="flex items-center space-x-2 mb-1">
+            {/* Mobile Layout */}
+            <div className="md:hidden space-y-3">
+              {/* Header Row */}
+              <div className="flex items-start justify-between">
+                <div className="flex items-center space-x-2 flex-shrink-0">
+                  {expense.paymentMethod === 'credit' ? (
+                    <CreditCard className="h-4 w-4 text-primary" />
+                  ) : (
+                    <Banknote className="h-4 w-4 text-accent" />
+                  )}
                   <Badge 
                     variant="outline"
-                    className={CATEGORY_COLORS[expense.category]}
+                    className={`${CATEGORY_COLORS[expense.category]} text-xs`}
                   >
                     {CATEGORIES[expense.category]}
                   </Badge>
-                  <Badge variant="outline" className="text-xs">
-                    {SUBCATEGORIES[expense.category]?.[expense.subcategory as keyof typeof SUBCATEGORIES[typeof expense.category]] || expense.subcategory}
-                  </Badge>
-                  <Badge variant="outline">
-                    {PAYMENT_METHODS[expense.paymentMethod]}
-                  </Badge>
                 </div>
-                {expense.description && (
-                  <p className="text-sm text-foreground mb-1 font-medium truncate">
+                <div className="text-right flex-shrink-0">
+                  <p className="text-lg font-semibold text-foreground">
+                    R$ {expense.value.toFixed(2)}
+                  </p>
+                </div>
+              </div>
+
+              {/* Description */}
+              {expense.description && (
+                <div className="pr-16">
+                  <p className="text-sm text-foreground font-medium break-words leading-relaxed">
                     {expense.description}
                   </p>
-                )}
-                <p className="text-sm text-muted-foreground">
+                </div>
+              )}
+
+              {/* Tags Row */}
+              <div className="flex flex-wrap gap-1">
+                <Badge variant="outline" className="text-xs">
+                  {SUBCATEGORIES[expense.category]?.[expense.subcategory as keyof typeof SUBCATEGORIES[typeof expense.category]] || expense.subcategory}
+                </Badge>
+                <Badge variant="outline" className="text-xs">
+                  {PAYMENT_METHODS[expense.paymentMethod]}
+                </Badge>
+              </div>
+
+              {/* Date and Actions Row */}
+              <div className="flex items-center justify-between">
+                <p className="text-xs text-muted-foreground">
                   {format(new Date(expense.date), "dd 'de' MMMM 'de' yyyy", { locale: ptBR })}
                 </p>
+                <div className="flex space-x-1">
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={() => onEditExpense(expense)}
+                    className="h-7 w-7 p-0 text-primary hover:text-primary hover:bg-primary/10 opacity-60 group-hover:opacity-100 transition-opacity"
+                  >
+                    <Edit className="h-3 w-3" />
+                  </Button>
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={() => onDeleteExpense(expense.id)}
+                    className="h-7 w-7 p-0 text-destructive hover:text-destructive hover:bg-destructive/10 opacity-60 group-hover:opacity-100 transition-opacity"
+                  >
+                    <Trash2 className="h-3 w-3" />
+                  </Button>
+                </div>
               </div>
             </div>
 
-            <div className="flex items-center space-x-3">
-              <div className="text-right">
-                <p className="text-lg font-semibold text-foreground">
-                  R$ {expense.value.toFixed(2)}
-                </p>
+            {/* Desktop Layout */}
+            <div className="hidden md:flex items-start justify-between">
+              <div className="flex items-start space-x-4 flex-1 min-w-0">
+                <div className="flex-shrink-0 mt-1">
+                  {expense.paymentMethod === 'credit' ? (
+                    <CreditCard className="h-5 w-5 text-primary" />
+                  ) : (
+                    <Banknote className="h-5 w-5 text-accent" />
+                  )}
+                </div>
+                
+                <div className="flex-1 min-w-0 space-y-2">
+                  {/* Tags Row */}
+                  <div className="flex flex-wrap gap-1">
+                    <Badge 
+                      variant="outline"
+                      className={CATEGORY_COLORS[expense.category]}
+                    >
+                      {CATEGORIES[expense.category]}
+                    </Badge>
+                    <Badge variant="outline" className="text-xs">
+                      {SUBCATEGORIES[expense.category]?.[expense.subcategory as keyof typeof SUBCATEGORIES[typeof expense.category]] || expense.subcategory}
+                    </Badge>
+                    <Badge variant="outline" className="text-xs">
+                      {PAYMENT_METHODS[expense.paymentMethod]}
+                    </Badge>
+                  </div>
+
+                  {/* Description */}
+                  {expense.description && (
+                    <p className="text-sm text-foreground font-medium break-words leading-relaxed max-w-full">
+                      {expense.description}
+                    </p>
+                  )}
+
+                  {/* Date */}
+                  <p className="text-sm text-muted-foreground">
+                    {format(new Date(expense.date), "dd 'de' MMMM 'de' yyyy", { locale: ptBR })}
+                  </p>
+                </div>
               </div>
-              
-              <div className="flex flex-col space-y-1">
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  onClick={() => onEditExpense(expense)}
-                  className="h-7 w-7 p-0 text-primary hover:text-primary hover:bg-primary/10"
-                >
-                  <Edit className="h-3 w-3" />
-                </Button>
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  onClick={() => onDeleteExpense(expense.id)}
-                  className="h-7 w-7 p-0 text-destructive hover:text-destructive hover:bg-destructive/10"
-                >
-                  <Trash2 className="h-3 w-3" />
-                </Button>
+
+              {/* Value and Actions */}
+              <div className="flex items-center space-x-4 flex-shrink-0">
+                <div className="text-right">
+                  <p className="text-lg font-semibold text-foreground whitespace-nowrap">
+                    R$ {expense.value.toFixed(2)}
+                  </p>
+                </div>
+                
+                <div className="flex space-x-1">
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={() => onEditExpense(expense)}
+                    className="h-8 w-8 p-0 text-primary hover:text-primary hover:bg-primary/10 opacity-60 group-hover:opacity-100 transition-opacity"
+                  >
+                    <Edit className="h-4 w-4" />
+                  </Button>
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={() => onDeleteExpense(expense.id)}
+                    className="h-8 w-8 p-0 text-destructive hover:text-destructive hover:bg-destructive/10 opacity-60 group-hover:opacity-100 transition-opacity"
+                  >
+                    <Trash2 className="h-4 w-4" />
+                  </Button>
+                </div>
               </div>
             </div>
           </div>
