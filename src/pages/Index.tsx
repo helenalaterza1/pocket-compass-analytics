@@ -46,13 +46,15 @@ const Index = () => {
       <header className="bg-card shadow-card border-b">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
           <div className="flex items-center justify-between w-full">
-            <div className="flex items-center space-x-3">
-              <div className="flex items-center justify-center w-12 h-12 bg-gradient-primary rounded-xl shadow-elegant">
-                <Wallet className="h-6 w-6 text-primary-foreground" />
-              </div>
+            <div className="flex items-center space-x-4">
+              <img 
+                src="/lovable-uploads/02ddcf78-f027-4a72-a4df-1a7d73af89bf.png" 
+                alt="Lebiste Finanças" 
+                className="h-12 w-auto"
+              />
               <div>
-                <h1 className="text-3xl font-bold text-foreground">Controle de Gastos</h1>
-                <p className="text-muted-foreground">Gerencie suas finanças pessoais</p>
+                <h1 className="text-3xl font-bold text-primary">Lebiste Finanças</h1>
+                <p className="text-muted-foreground">Gerencie suas finanças com simplicidade</p>
               </div>
             </div>
             <SettingsDialog />
