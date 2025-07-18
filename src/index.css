@@ -9,7 +9,7 @@ All colors MUST be HSL.
 @layer base {
   :root {
     /* Lebiste Finanças Color Palette - Inspirado no logo do peixe */
-    --background: 45 29 16;
+    --background: 0 0 100;
     --foreground: 207 74 20;
 
     --card: 255 255 255;
