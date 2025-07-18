@@ -52,14 +52,14 @@ All colors MUST be HSL.
 
     --radius: 0.75rem;
 
-    --sidebar-background: 248 250 252;
-    --sidebar-foreground: 30 58 138;
-    --sidebar-primary: 30 58 138;
-    --sidebar-primary-foreground: 248 250 252;
-    --sidebar-accent: 219 234 254;
-    --sidebar-accent-foreground: 30 58 138;
-    --sidebar-border: 226 232 240;
-    --sidebar-ring: 59 130 246;
+    --sidebar-background: 0 0 100;
+    --sidebar-foreground: 207 74 20;
+    --sidebar-primary: 207 74 20;
+    --sidebar-primary-foreground: 0 0 100;
+    --sidebar-accent: 203 89 53;
+    --sidebar-accent-foreground: 0 0 100;
+    --sidebar-border: 203 89 78;
+    --sidebar-ring: 195 100 67;
   }
 
   .dark {
