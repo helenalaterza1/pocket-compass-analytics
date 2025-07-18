@@ -52,7 +52,7 @@ const Index = () => {
                 <img 
                   src="/lovable-uploads/ce1de821-0d87-4b02-b4de-02ab51bb89eb.png" 
                   alt="Lebiste Finanças" 
-                  className="h-16 w-auto drop-shadow-lg hover:scale-105 transition-transform duration-300"
+                  className="h-24 w-auto drop-shadow-lg hover:scale-105 transition-transform duration-300"
                 />
                 <div className="absolute -inset-2 bg-white/20 rounded-full blur-xl opacity-50"></div>
               </div>
