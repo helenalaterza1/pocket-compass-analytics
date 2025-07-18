@@ -38,7 +38,7 @@ All colors MUST be HSL.
     --ring: 195 100 67;
 
     --success: 142 76 73;
-    --warning: 43 96 56;
+    --warning: 350 20 85;
     --info: 195 100 67;
 
     --gradient-primary: linear-gradient(135deg, hsl(207 74% 20%), hsl(195 100% 67%));
